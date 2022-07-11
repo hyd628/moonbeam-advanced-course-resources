@@ -45,7 +45,7 @@ const main = async () => {
   console.log(`Asset Address Precompile: ${u8aToHex(assetAddress)}`);
   console.log(`Asset ID is ${BigInt(assetIdHex).toString(10)}\n\n`);
 
-  await api.disconnect();
+  process.exit();
 };
 
 main();
