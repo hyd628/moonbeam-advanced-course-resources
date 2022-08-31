@@ -57,16 +57,8 @@ contract RandomnessDemo is RandomnessConsumer {
     Randomness.RandomnessSource randomnessSource;
 
     constructor(Randomness.RandomnessSource source)
-        payable
         RandomnessConsumer()
     {
-        /// Because this contract can only perform 1 random request at a time,
-        /// We only need to have 1 required deposit.
-        uint256 requiredDeposit = randomness.requiredDeposit();
-        if (msg.value < requiredDeposit) {
-            revert DepositTooLow(msg.value, requiredDeposit);
-        }
-
         randomnessSource = source;
         owner = msg.sender;
         globalRequestCount = 0;
@@ -83,20 +75,10 @@ contract RandomnessDemo is RandomnessConsumer {
             revert WaitingFulfillment();
         }
 
-        uint256 fee = msg.value;
-        if (fee < MIN_FEE) {
-            revert NotEnoughFee(fee, MIN_FEE);
-        }
+        uint256 fee = msg.value - randomness.requiredDeposit();
 
-        /// We verify there is enough balance on the contract to pay for the deposit.
-        /// This would fail only if the deposit amount required is changed in the
-        /// Randomness Precompile.
-        uint256 requiredDeposit = randomness.requiredDeposit();
-        if (address(this).balance < requiredDeposit) {
-            revert DepositTooLow(
-                address(this).balance,
-                requiredDeposit
-            );
+        if (msg.value < randomness.requiredDeposit() + MIN_FEE) {
+            revert NotEnoughFee(msg.value, randomness.requiredDeposit() + MIN_FEE);
         }
 
         requestId = randomness.requestLocalVRFRandomWords(
